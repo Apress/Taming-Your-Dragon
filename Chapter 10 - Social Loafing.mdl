@@ -1,0 +1,472 @@
+{UTF-8}
+PDY IncreaseFromCooperationD(
+	[(0,0)-(10,10)],(0,0.05),(0.1,0.2),(0.2,0.8),(0.3,1),(1,1))
+	~	dmnl
+	~		|
+
+Completed work= INTEG (
+	producingD,
+		0)
+	~	
+	~		~	:SUPPLEMENTARY 
+	|
+
+Cooperation level of B=
+	0.2
+	~	dmnl [0,1,0.05]
+	~		|
+
+Cooperation level of C=
+	0.2
+	~	dmnl [0,1,0.05]
+	~		|
+
+EffectOfCooperationOnPDY BC=
+	PDY IncreaseFromCooperationC(Cooperation level of B)
+	~	dmnl
+	~		|
+
+EffectOfCooperationOnPDYBD=
+	PDY IncreaseFromCooperationD(Cooperation level of B)
+	~	dmnl
+	~		|
+
+EffectOfCooperationOnPDYCD=
+	PDY IncreaseFromCooperationD(Cooperation level of C)
+	~	dmnl
+	~		|
+
+EffectOfQualityOn PDY BC=
+	PDY ChangeFromQualityC(Quality level of B)
+	~	dmnl
+	~	As the quality of the output from B declines, C must spend more time \
+		completing a unit of its own work (re-working B's work, investigating and \
+		making sense of B's work etc)
+	|
+
+EffectOfQualityOn PDY BD=
+	PDY ChangeFromQualityD(Quality level of B)
+	~	dmnl
+	~		|
+
+Quality level of B=
+	0.9
+	~	dmnl [0.1,1,0.05]
+	~		|
+
+PDY IncreaseFromCooperationC(
+	[(0,0)-(10,10)],(0,0.05),(0.1,0.2),(0.2,0.8),(0.3,1),(1,1))
+	~	dmnl
+	~		|
+
+PDY ChangeFromQualityC(
+	[(0,0)-(10,10)],(0,0.05),(0.2,0.1),(0.5,0.3),(0.8,0.8),(1,1))
+	~	dmnl
+	~		|
+
+productivityB=
+	normalPDYB*EffectOfRemainingWorkOnPDYB*(1 - Cooperation level of B)/Quality level of B
+	~	widgets/person/Month
+	~	As B cooperates more, its ability to complete its own work will decrease
+		As B reduces the quality of its own output. it can accomplish more \
+		throughput
+	|
+
+productivityD=
+	normalPDYD * 
+	EffectOfRemainingWorkOnPDYD * 
+	EffectOfCooperationOnPDYBD * 
+	EffectOfCooperationOnPDYCD * 
+	EffectOfQualityOn PDY BD
+	~	widgets/person/Month
+	~		|
+
+PDY ChangeFromQualityD(
+	[(0,0)-(10,10)],(0,0.05),(0.2,0.1),(0.5,0.3),(0.8,0.8),(1,1))
+	~	dmnl
+	~		|
+
+productivityC=
+	normalPDYC * 
+	EffectOfRemainingWorkOnPDYC * 
+	EffectOfCooperationOnPDY BC * 
+	(1-Cooperation level of C) * 
+	EffectOfQualityOn PDY BC
+	~	widgets/person/Month
+	~	As B cooperates more, C can more easily understand the work it needs to do. Hence \
+		productivity is higher
+		As B reduces the quality of its own output. C must spend more time to \
+		achieve same output
+	|
+
+EffectOfRemainingWorkOnPDYB=
+	EffectOfRemainingWorkOnPDYB f(RelativeRemainingWorkB)
+	~	dmnl
+	~		|
+
+EffectOfRemainingWorkOnPDYB f(
+	[(0,0)-(1.5,1.1),(0,0),(1,1),(1.5,1)],(0,0),(0.130588,0.313167),(0.338824,0.595018),\
+		(0.585882,0.81815),(0.751765,0.927758),(1,1),(1.5,1))
+	~	dmnl
+	~		|
+
+EffectOfRemainingWorkOnPDYC=
+	EffectOfRemainingWorkOnPDYC f(RelativeRemainingWorkC)
+	~	dmnl
+	~		|
+
+EffectOfRemainingWorkOnPDYC f(
+	[(0,0)-(1.5,1.1),(0,0),(1,1),(1.5,1)],(0,0),(0.130588,0.313167),(0.338824,0.595018),\
+		(0.585882,0.81815),(0.751765,0.927758),(1,1),(1.5,1))
+	~	dmnl
+	~		|
+
+EffectOfRemainingWorkOnPDYD=
+	EffectOfRemainingWorkOnPDYD f(RelativeRemainingWorkD)
+	~	dmnl
+	~		|
+
+EffectOfRemainingWorkOnPDYD f(
+	[(0,0)-(1.5,1.1),(0,0),(1,1),(1.5,1)],(0,0),(0.130588,0.313167),(0.338824,0.595018),\
+		(0.585882,0.81815),(0.751765,0.927758),(1,1),(1.5,1))
+	~	dmnl
+	~		|
+
+Requirements B= INTEG (
+	producingA-producingB,
+		RequiredWorkForFullProductivityB - RequiredWorkForFullProductivityB)
+	~	widgets
+	~	AKA InventoryB
+	|
+
+Coding C= INTEG (
+	producingB-producingC,
+		RequiredWorkForFullProductivityC - RequiredWorkForFullProductivityC)
+	~	widgets
+	~	AKA InventoryC
+	|
+
+Testing D= INTEG (
+	producingC-producingD,
+		RequiredWorkForFullProductivityD - RequiredWorkForFullProductivityD)
+	~	widgets
+	~	AKA InventoryD
+	|
+
+normalPDYB=
+	5
+	~	widgets/person/Month
+	~		|
+
+normalPDYC=
+	5
+	~	widgets/person/Month
+	~		|
+
+normalPDYD=
+	5
+	~	widgets/person/Month
+	~		|
+
+producingA=
+	workersA*productivityA * 10 * PULSE(1, 1)
+	~	widgets/Month
+	~		|
+
+producingB=
+	workersB*productivityB
+	~	widgets/Month
+	~		|
+
+producingC=
+	workersC*productivityC
+	~	widgets/Month
+	~		|
+
+producingD=
+	workersD*productivityD
+	~	widgets/Month
+	~		|
+
+productivityA=
+	5
+	~	widgets/person/Month
+	~		|
+
+RelativeRemainingWorkB=
+	Requirements B/RequiredWorkForFullProductivityB
+	~	fraction
+	~		|
+
+RelativeRemainingWorkC=
+	Coding C/RequiredWorkForFullProductivityC
+	~	fraction
+	~		|
+
+RelativeRemainingWorkD=
+	Testing D/RequiredWorkForFullProductivityD
+	~	fraction
+	~		|
+
+RequiredWorkForFullProductivityB=
+	15
+	~	widgets
+	~		|
+
+RequiredWorkForFullProductivityC=
+	15
+	~	widgets
+	~		|
+
+RequiredWorkForFullProductivityD=
+	15
+	~	widgets
+	~		|
+
+workersA=
+	5
+	~	people [0,5,0.1]
+	~		|
+
+workersB=
+	5
+	~	people [0,5,0.1]
+	~		|
+
+workersC=
+	5
+	~	people [0,5,0.1]
+	~		|
+
+workersD=
+	12
+	~	people [0,12,0.1]
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 20
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Workflow
+$192-192-192,0,Arial|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,94,0
+10,1,workersB,755,103,35,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||0-128-0,0,0,0,0,0,0
+1,2,1,4,0,0,0,12,0,0,0,-1--1--1,,1|(0,0)|
+1,3,4,6,4,0,0,22,0,0,0,-1--1--1,,1|(910,179)|
+11,4,0,805,179,5,6,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,5,producingB,805,195,41,10,40,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,6,Coding C,1055,173,44,18,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,7,4,22,100,0,0,22,0,0,0,-1--1--1,,1|(785,179)|
+10,8,workersC,1097,103,36,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||0-128-0,0,0,0,0,0,0
+1,9,8,11,0,0,0,12,0,0,0,-1--1--1,,1|(0,0)|
+1,10,11,13,4,0,0,22,0,0,0,-1--1--1,,1|(1235,177)|
+11,11,0,1153,177,5,6,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,12,producingC,1153,193,42,10,40,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,13,Testing D,1356,173,44,18,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,14,11,6,100,0,0,22,0,0,0,-1--1--1,,1|(1123,177)|
+10,15,workersA,393,111,35,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||0-128-0,0,0,0,0,0,0
+10,16,productivityA,349,239,46,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,17,15,20,0,0,0,12,0,0,0,-1--1--1,,1|(0,0)|
+1,18,16,21,1,0,0,12,0,0,0,-1--1--1,,1|(399,221)|
+1,19,20,22,4,0,0,22,0,0,0,-1--1--1,,1|(547,180)|
+11,20,0,436,180,5,6,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,21,producingA,436,196,41,10,40,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,22,Requirements B,712,175,58,20,3,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,23,48,380,180,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,24,20,23,100,0,0,22,0,0,0,-1--1--1,,1|(410,180)|
+1,25,27,108,4,0,0,22,0,0,0,-1--1--1,,1|(1522,177)|
+1,26,27,13,100,0,0,22,0,0,0,-1--1--1,,1|(1427,177)|
+11,27,0,1459,177,5,6,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,28,producingD,1459,193,42,10,40,3,0,2,-1,0,0,0,0-0-0,0-0-0,|||0-0-255,0,0,0,0,0,0
+10,29,workersD,1405,103,36,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||0-128-0,0,0,0,0,0,0
+1,30,29,27,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,31,productivityB,765,272,46,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,32,RequiredWorkForFullProductivityB,510,328,50,29,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+10,33,RelativeRemainingWorkB,618,258,83,25,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,34,32,33,1,0,0,12,0,64,0,-1--1--1,,1|(526,313)|
+1,35,22,33,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,36,EffectOfRemainingWorkOnPDYB,659,343,47,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,37,33,36,1,0,0,12,0,64,0,-1--1--1,,1|(630,295)|
+1,38,36,31,1,0,0,12,0,64,0,-1--1--1,,1|(731,308)|
+10,39,normalPDYB,745,364,26,22,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,40,39,31,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,41,EffectOfRemainingWorkOnPDYB f,575,416,59,35,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,42,41,36,0,0,0,12,2,0,0,-1--1--1,|||0-0-0,1|(0,0)|
+1,43,31,5,1,0,0,12,1,64,0,0-0-0,|||0-0-0,1|(785,240)|
+10,44,productivityC,1147,263,47,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,45,RequiredWorkForFullProductivityC,949,357,50,26,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+10,46,RelativeRemainingWorkC,1007,256,90,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,47,45,46,1,0,0,12,0,64,0,-1--1--1,,1|(984,293)|
+1,48,6,46,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,49,EffectOfRemainingWorkOnPDYC,1081,355,47,27,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,50,46,49,1,0,0,12,0,64,0,-1--1--1,,1|(1028,311)|
+1,51,49,44,1,0,0,12,0,64,0,-1--1--1,,1|(1131,308)|
+10,52,normalPDYC,1156,340,30,20,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,53,52,44,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,54,EffectOfRemainingWorkOnPDYC f,1063,445,47,26,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,55,54,49,0,0,0,12,2,0,0,-1--1--1,|||0-0-0,1|(0,0)|
+1,56,44,12,1,0,0,12,1,64,0,0-0-0,|||0-0-0,1|(1151,242)|
+10,57,productivityD,1536,256,47,10,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,58,RequiredWorkForFullProductivityD,1378,360,57,23,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+10,59,RelativeRemainingWorkD,1375,268,42,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,60,58,59,1,0,0,12,0,64,0,-1--1--1,,1|(1377,304)|
+1,61,13,59,1,0,0,12,0,64,0,-1--1--1,,1|(1348,223)|
+10,62,EffectOfRemainingWorkOnPDYD,1479,340,47,30,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,63,59,62,1,0,0,12,0,64,0,-1--1--1,,1|(1404,301)|
+1,64,62,57,1,0,0,12,0,64,0,-1--1--1,,1|(1523,293)|
+10,65,normalPDYD,1589,324,47,10,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,66,65,57,0,0,0,12,0,64,0,-1--1--1,,1|(0,0)|
+10,67,EffectOfRemainingWorkOnPDYD f,1497,441,59,30,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|||128-0-128,0,0,0,0,0,0
+1,68,67,62,0,0,0,12,2,0,0,-1--1--1,|||0-0-0,1|(0,0)|
+1,69,57,28,1,0,0,12,1,64,0,0-0-0,|||0-0-0,1|(1515,220)|
+1,70,45,6,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+1,71,58,13,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+1,72,32,22,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+12,73,0,207,184,17,11,8,7,0,16,-1,0,0,0,-1--1--1,0-0-0,||B|0-0-0,0,0,0,0,0,0
+Key
+12,74,0,207,224,22,10,8,7,0,2,-1,0,0,0,-1--1--1,0-0-0,|||0-128-0,0,0,0,0,0,0
+Inputs
+12,75,0,208,262,29,10,8,7,0,2,-1,0,0,0,-1--1--1,0-0-0,|||0-0-255,0,0,0,0,0,0
+Outputs
+12,76,0,207,302,43,10,8,7,0,2,-1,0,0,0,-1--1--1,0-0-0,|||128-0-128,0,0,0,0,0,0
+Parameters
+12,77,0,2425,955,413,260,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Inventory_B_C_D_Complete
+10,78,Cooperation level of B,743,583,54,24,8,3,0,2,-1,0,0,0,-1--1--1,-1--1--1,|||0-128-0,0,0,0,0,0,0
+10,79,EffectOfCooperationOnPDY BC,1142,566,106,18,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,80,EffectOfCooperationOnPDYBD,1574,567,111,30,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,81,PDY IncreaseFromCooperationC,1100,678,120,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,82,PDY IncreaseFromCooperationD,1663,663,120,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,83,81,79,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,84,79,44,1,0,0,0,0,192,0,-1--1--1,,1|(1235,379)|
+1,85,82,80,1,0,0,0,0,192,0,-1--1--1,,1|(1617,597)|
+1,86,80,57,1,0,0,0,0,192,0,-1--1--1,,1|(1673,386)|
+1,87,78,79,1,0,0,0,0,192,0,-1--1--1,,1|(936,663)|
+1,88,78,80,1,0,0,0,0,192,0,-1--1--1,,1|(1444,679)|
+1,89,78,31,1,0,0,0,0,192,0,-1--1--1,,1|(814,441)|
+10,90,Cooperation level of C,1049,825,54,24,8,3,0,2,-1,0,0,0,-1--1--1,-1--1--1,|||0-128-0,0,0,0,0,0,0
+10,91,EffectOfCooperationOnPDYCD,1818,565,70,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,92,90,91,1,0,0,0,0,192,0,-1--1--1,,1|(1664,774)|
+1,93,91,57,1,0,0,0,0,192,0,-1--1--1,,1|(1759,382)|
+1,94,90,44,1,0,0,0,0,192,0,-1--1--1,,1|(1274,477)|
+1,95,82,91,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,96,Quality level of B,768,1157,52,24,8,3,0,2,-1,0,0,0,-1--1--1,-1--1--1,|||0-128-0,0,0,0,0,0,0
+10,97,EffectOfQualityOn PDY BC,1048,999,79,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,98,PDY ChangeFromQualityC,1075,1098,93,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,99,PDY ChangeFromQualityD,1832,1058,93,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,100,EffectOfQualityOn PDY BD,1748,1000,79,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,101,96,31,1,0,0,0,0,192,0,-1--1--1,,1|(917,711)|
+1,102,98,97,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,103,96,97,1,0,0,0,0,192,0,-1--1--1,,1|(906,1101)|
+1,104,97,44,1,0,0,0,0,192,0,-1--1--1,,1|(1310,556)|
+1,105,96,100,1,0,0,0,0,192,0,-1--1--1,,1|(1442,1131)|
+1,106,99,100,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,107,100,57,1,0,0,0,0,192,0,-1--1--1,,1|(1957,656)|
+10,108,Completed work,1630,176,49,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,109,0,2420,397,412,272,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Producing_B__C__D
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Dashboard
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,133,0
+12,1,0,241,210,84,37,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+Cooperation level of B,0,0,0
+12,2,0,242,366,80,37,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+Cooperation level of C,0,0,0
+12,3,0,241,278,83,37,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+Quality level of B,0,0,0
+12,4,0,712,421,324,394,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Inventory_B_C_D_Complete
+12,5,0,1370,416,312,388,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Producing_B__C__D
+///---\\\
+:GRAPH Inventory_B_C_D_Complete
+:TITLE Inventory B, C, D, complete
+:SCALE
+:VAR Requirements B
+:DATASET *1
+:LINE-WIDTH 3
+:SCALE
+:VAR Coding C
+:DATASET *1
+:VAR Testing D
+:DATASET *1
+:VAR Completed work
+:DATASET *1
+
+:GRAPH Producing_B__C__D
+:TITLE Producing B, C, D
+:SCALE
+:VAR producingB
+:DATASET *1
+:LINE-WIDTH 3
+:VAR producingC
+:DATASET *1
+:VAR producingD
+:DATASET *1
+:L<%^E!@
+1:Current.vdfx
+4:Time
+5:Completed work
+9:Current
+19:133,1
+24:0
+25:20
+26:20
+22:$,Dollar,Dollars,$s
+22:Day,Days
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:task,tasks
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+23:0
+15:0,0,0,0,0,0
+27:2,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1

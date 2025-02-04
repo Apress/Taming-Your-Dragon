@@ -1,0 +1,697 @@
+{UTF-8}
+scheduled time remaining=
+	IF THEN ELSE(Time < reset time, 
+	  MAX(0, scheduled completion date - Time), 
+	  MAX(0, scheduled completion date project 2 and 3 + reset time - Time) )
+	~	Month
+	~		|
+
+friction=
+	coefficient of friction lookup(Technical Debt/codebase size)
+	~	Dmnl
+	~		|
+
+scheduled completion date project 2 and 3=
+	8
+	~	Month [0,24,0.1]
+	~		|
+
+codebase size=
+	50
+	~	Drawing
+	~		|
+
+project was done=
+	DELAY FIXED(project is done, 0, 0)
+	~	Dmnl
+	~		|
+
+Work Remaining= INTEG (
+	IF THEN ELSE(Time = reset time, 
+	  15*initial project definition, 
+	  rework discovery rate - workflow - fighting fires),
+		initial project definition)
+	~	Drawing
+	~		|
+
+reset time=
+	IF THEN ELSE( Time < 51, 30, 60)
+	~	Month
+	~		|
+
+project is done=
+	IF THEN ELSE( Time = reset time, 
+	  0,
+	  IF THEN ELSE( project was done :AND:
+	    (Work Remaining < 10 :OR:fraction complete > restart fraction), 
+	    1, 
+	    IF THEN ELSE((Work Remaining < 10), 1, 0)))
+	~	Dmnl
+	~	IF THEN ELSE( project was done :AND:
+		    (fraction complete > restart fraction :OR: Work Remaining < 10), 
+		    1, 
+		    IF THEN ELSE((fraction complete >= 1 :OR: Work Remaining < 10), 1, 0))
+	|
+
+Work Accomplished= INTEG (
+	IF THEN ELSE( Time = reset time, -15*Work Accomplished, workflow - rework discovery rate\
+		),
+		0)
+	~	Drawing
+	~		|
+
+td during early phase=
+	0
+	~	Dmnl [0,1,0.1]
+	~	Try 0.1 as an intial value
+		prospect theory gains
+	|
+
+coefficient of friction lookup(
+	[(0,0)-(10,10)],(0,1),(1,1),(2,0.8),(5,0.5),(10,0.2),(20,0))
+	~	Dmnl
+	~		|
+
+workflow=
+	IF THEN ELSE(project is done, 0, Veteran Workforce * productivity * friction)
+	~	Drawing/Month
+	~		|
+
+td during late phase=
+	0
+	~	Dmnl [0,2,0.1]
+	~	Typically, try 2x prospect theory gains
+		prospect theory loss
+	|
+
+Technical Debt= INTEG (
+	fighting fires,
+		initial tech debt)
+	~	Drawing
+	~		|
+
+initial tech debt=
+	0
+	~	Drawing [0,1000,100]
+	~		|
+
+fighting fires=
+	IF THEN ELSE(project is done, 
+	    0,
+	    IF THEN ELSE(schedule pressure < 1.5, 
+	        Veteran Workforce * productivity * td during early phase, 
+	        Veteran Workforce * productivity * td during late phase))
+	~	Drawing/Month
+	~		|
+
+Average Overtime= INTEG (
+	(overtime - Average Overtime)/time to average overtime,
+		overtime)
+	~	Dmnl
+	~		|
+
+briefing completions=
+	New Workforce/onboarding time
+	~	Person/Month
+	~		|
+
+onboarding time=
+	2
+	~	Month [0.2,6,0.2]
+	~		|
+
+cost=
+	total workforce * wage rate
+	~	£/Month
+	~		|
+
+Cumulative Cost= INTEG (
+	cost,
+		0)
+	~	£
+	~		~	:SUPPLEMENTARY 
+	|
+
+dismissal time=
+	0.5
+	~	Month
+	~		|
+
+dismissals=
+	IF THEN ELSE(indicated workforce < total workforce, 
+	    (total workforce - indicated workforce)/dismissal time, 0)
+	~	Person/Month
+	~		|
+
+eff fatigue productivity=
+	eff fatigue productivity lookup(Average Overtime)
+	~	Dmnl
+	~		|
+
+eff fatigue productivity lookup(
+	[(0,0)-(10,10)],(0,1.2),(1,1),(1.2,0.9),(2,0.1))
+	~	Dmnl
+	~		|
+
+eff fatigue quality=
+	eff fatigue quality lookup(Average Overtime)
+	~	Dmnl
+	~		|
+
+eff fatigue quality lookup(
+	[(0,0)-(10,10)],(0,1.1),(1,1),(1.2,0.9),(1.5,0.5),(2,0.4))
+	~	Dmnl
+	~		|
+
+time to average overtime=
+	2
+	~	Month [0,4,0.1]
+	~		|
+
+hires=
+	IF THEN ELSE(indicated workforce >total workforce, 
+	    (indicated workforce - total workforce)/time to increase workforce, 
+	    0)
+	~	Person/Month
+	~		|
+
+indicated workforce=
+	IF THEN ELSE(
+	    total workforce < required workforce, 
+	    willingness to change workforce * required workforce + 
+	    (1 - willingness to change workforce) * total workforce, 
+	    required workforce)
+	~	Person
+	~		|
+
+time to increase workforce=
+	2
+	~	Month [0.2,5,0.2]
+	~		|
+
+max schedule pressure=
+	5
+	~	Dmnl
+	~		|
+
+max workflow=
+	10000
+	~	Drawing/Month
+	~		|
+
+max workforce=
+	150
+	~	Person [0,500]
+	~		|
+
+New Workforce= INTEG (
+	hires - briefing completions - dismissals * ZIDZ(New Workforce, total workforce),
+		0)
+	~	Person
+	~		|
+
+normal productivity=
+	1
+	~	Drawing/(Month*Person)
+	~		|
+
+normal work quality=
+	0.9
+	~	Dmnl
+	~		|
+
+normal workflow=
+	normal productivity * indicated workforce
+	~	Drawing/Month
+	~	In other model: normal productivity * required workforce
+	|
+
+overtime=
+	overtime lookup(schedule pressure)
+	~	Dmnl
+	~		|
+
+overtime lookup(
+	[(0,0)-(10,10)],(0,0.7),(1,1),(1.2,1.2),(1.5,1.4),(2,1.45),(5,1.5),(10,1.55),(20,1.6\
+		),(1000,1.7))
+	~	Dmnl
+	~		|
+
+productivity=
+	normal productivity * overtime * eff fatigue productivity
+	~	Drawing/Person/Month
+	~		|
+
+Project Completion Time=
+	SAMPLE IF TRUE(project was done = 0, Time, 0)
+	~	Month
+	~		~	:SUPPLEMENTARY 
+	|
+
+required workflow=
+	IF THEN ELSE(project is done, 0, 
+	    XIDZ( Work Remaining, scheduled time remaining, max workflow))
+	~	Drawing/Month
+	~		|
+
+required workforce=
+	MIN(max workforce, required workflow/normal productivity )
+	~	Person [0,?]
+	~		|
+
+restart fraction=
+	0.8
+	~	Dmnl [0,1,0.1]
+	~		|
+
+willingness to change workforce=
+	willingness to change workforce lookup(fraction complete)
+	~	Dmnl
+	~		|
+
+schedule pressure=
+	IF THEN ELSE(
+	    scheduled time remaining <=0 :AND: 
+	    :NOT: project is done, 
+	    max schedule pressure, 
+	    ZIDZ(required workflow, normal workflow) )
+	~	Dmnl
+	~		|
+
+scheduled completion date=
+	8
+	~	Month [0,24,0.1]
+	~		|
+
+Veteran Workforce= INTEG (
+	briefing completions - dismissals * ZIDZ(Veteran Workforce, total workforce),
+		0)
+	~	Person
+	~		|
+
+Undiscovered Rework= INTEG (
+	workflow * (1 - work quality) - rework discovery rate,
+		0)
+	~	Drawing
+	~		|
+
+willingness to change workforce lookup(
+	[(0,0)-(1,1)],(0,1),(0.5,0.8),(0.8,0),(1,0),(2,0))
+	~	Dmnl
+	~		|
+
+total workforce=
+	New Workforce + Veteran Workforce
+	~	Person
+	~		|
+
+work quality=
+	normal work quality * eff fatigue quality
+	~	Dmnl
+	~		|
+
+wage rate=
+	6000
+	~	£/Person/Month
+	~		|
+
+fraction complete=
+	Work Accomplished/initial project definition
+	~	Dmnl
+	~		|
+
+time to detect error lookup(
+	[(0,0)-(10,10)],(0,5),(0.5,3),(1,0.5),(1.1,0))
+	~	Month
+	~		|
+
+time to detect errors=
+	time to detect error lookup(fraction complete)
+	~	Month
+	~		|
+
+initial project definition=
+	1000
+	~	Drawing [0,2000,50]
+	~		|
+
+rework discovery rate=
+	Undiscovered Rework/time to detect errors
+	~	Drawing/Month
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Main workflow
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,173,0
+10,1,Work Remaining,492,503,42,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Work Accomplished,1079,503,56,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Undiscovered Rework,1079,603,56,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,4,8,1,100,0,0,22,0,192,0,-1--1--1,,1|(646,506)|
+1,5,8,2,4,0,0,22,0,192,0,-1--1--1,,1|(896,506)|
+11,6,0,941,601,6,8,2,3,0,0,1,0,0,0,0,0,0,0,0,0
+1,7,6,3,4,0,0,22,0,192,0,-1--1--1,,1|(985,601)|
+11,8,0,764,506,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,9,workflow,764,536,42,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,10,8,8,4,0,0,22,0,192,0,-1--1--1,,1|(764,506)|
+1,11,8,6,36,0,0,22,0,192,0,-1--1--1,,1|(941,506)|
+1,12,14,3,100,0,0,22,0,192,0,-1--1--1,,4|(1298,815)|(1298,816)|(1298,602)|(1216,602)|
+1,13,14,1,4,0,0,22,0,192,0,-1--1--1,,4|(119,815)|(119,814)|(119,509)|(284,509)|
+11,14,0,938,815,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,15,rework discovery rate,938,845,42,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+11,16,0,1297,604,6,8,2,3,0,0,1,0,0,0,0,0,0,0,0,0
+1,17,16,2,100,0,0,22,0,192,0,-1--1--1,,3|(1297,502)|(1136,502)|(1135,502)|
+1,18,16,14,36,0,0,22,0,192,0,-1--1--1,,3|(1297,816)|(939,816)|(939,815)|
+10,19,initial project definition,196,153,59,29,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,20,project is done,827,387,77,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,21,time to detect errors,1434,540,60,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,22,19,1,1,0,0,0,0,192,0,-1--1--1,,1|(177,237)|
+1,23,3,14,1,0,0,0,0,192,0,-1--1--1,,1|(949,712)|
+1,24,21,14,1,0,0,0,0,192,0,-1--1--1,,1|(1386,736)|
+10,25,rework discovery rate,1187,407,42,26,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,26,25,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,27,fraction complete,864,240,79,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,28,time to detect error lookup,1107,154,56,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,29,28,21,1,0,0,0,0,192,0,-1--1--1,,1|(1294,220)|
+1,30,27,21,1,0,0,0,0,192,0,-1--1--1,,1|(1290,306)|
+1,31,27,20,1,0,0,0,0,192,0,-1--1--1,,1|(864,312)|
+1,32,19,27,1,0,0,0,0,192,0,-1--1--1,,1|(529,155)|
+1,33,2,27,1,0,0,0,0,192,0,-1--1--1,,1|(1088,382)|
+10,34,Veteran Workforce,644,400,66,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,35,restart fraction,794,270,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,36,project was done,999,369,51,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,37,35,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,38,20,36,1,0,0,0,0,192,0,-1--1--1,,1|(921,333)|
+1,39,36,20,1,0,0,0,0,192,0,-1--1--1,,1|(929,380)|
+10,40,work quality,835,653,78,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,41,40,3,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,42,34,8,1,0,0,0,0,192,0,-1--1--1,,1|(694,451)|
+1,43,20,8,1,0,0,0,0,192,0,-1--1--1,,1|(797,496)|
+10,44,Technical Debt,491,331,42,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,45,47,1,100,0,0,22,0,192,0,-1--1--1,,1|(489,454)|
+1,46,47,44,4,0,0,22,0,192,0,-1--1--1,,1|(489,384)|
+11,47,0,489,421,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,48,fighting fires,539,421,42,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,49,schedule pressure,257,259,42,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,50,friction,650,317,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,51,coefficient of friction lookup,646,240,51,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,52,49,47,1,0,0,0,0,192,0,-1--1--1,,1|(405,319)|
+1,53,44,50,1,0,0,0,0,192,0,-1--1--1,,1|(544,355)|
+1,54,51,50,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,55,34,48,1,0,0,0,0,192,0,-1--1--1,,1|(608,424)|
+10,56,productivity,619,470,75,12,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,57,56,8,1,0,0,0,0,192,0,-1--1--1,,1|(687,494)|
+1,58,56,48,1,0,0,0,0,192,0,-1--1--1,,1|(572,472)|
+10,59,td during early phase,288,308,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,60,td during late phase,331,385,51,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,61,59,47,1,0,0,0,0,192,0,-1--1--1,,1|(421,364)|
+1,62,60,47,1,0,0,0,0,192,0,-1--1--1,,1|(424,397)|
+1,63,50,9,1,0,0,0,0,64,0,-1--1--1,,1|(729,415)|
+1,64,20,48,1,17,0,0,0,192,0,-1--1--1,,1|(617,369)|
+1,65,1,20,0,1,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,66,initial tech debt,378,261,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,67,66,44,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+10,68,Time,414,622,43,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,69,68,1,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,70,Time,1049,456,40,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,71,70,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,72,reset time,372,557,47,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,73,72,1,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,74,reset time,952,470,56,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,75,74,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,76,74,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,77,70,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,78,68,72,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,79,codebase size,486,194,65,19,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,80,79,50,1,0,0,0,0,192,0,-1--1--1,,1|(619,273)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Workforce
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,132,0
+10,1,indicated workforce,791,270,96,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Veteran Workforce,1336,-44,42,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,16,100,0,0,22,0,192,0,-1--1--1,,1|(987,-39)|
+1,4,5,2,4,0,0,22,0,192,0,-1--1--1,,1|(1193,-39)|
+11,5,0,1086,-39,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,briefing completions,1086,-9,60,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,time to increase workforce,370,9,73,31,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,8,0,987,1190,626,223,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+workflow_and_Workforce
+10,9,willingness to change workforce,483,272,141,14,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,10,fraction complete,293,366,95,12,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,11,willingness to change workforce lookup,538,382,74,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,12,9,1,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,13,10,9,1,0,0,0,0,192,0,-1--1--1,,1|(407,328)|
+1,14,11,9,1,0,0,0,0,192,0,-1--1--1,,1|(508,304)|
+10,15,normal productivity,266,197,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,16,New Workforce,834,-37,60,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,17,48,552,-39,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,18,20,17,100,0,0,22,0,192,0,-1--1--1,,1|(612,-39)|
+1,19,20,16,4,0,0,22,0,192,0,-1--1--1,,1|(724,-39)|
+11,20,0,668,-39,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,21,hires,668,-9,42,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,22,48,1336,74,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+11,23,0,1336,22,8,6,1,3,0,0,1,0,0,0,0,0,0,0,0,0
+1,24,23,2,100,0,0,22,0,192,0,-1--1--1,,1|(1336,-3)|
+1,25,23,22,4,0,0,22,0,192,0,-1--1--1,,1|(1336,47)|
+10,26,required workflow,228,125,91,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,27,7,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,28,1,21,1,0,0,0,0,192,0,-1--1--1,,1|(672,110)|
+12,29,48,834,69,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+11,30,0,834,23,8,6,1,3,0,0,1,0,0,0,0,0,0,0,0,0
+1,31,30,16,100,0,0,22,0,192,0,-1--1--1,,1|(834,1)|
+1,32,30,29,4,0,0,22,0,192,0,-1--1--1,,1|(834,45)|
+10,33,onboarding time,1085,-120,60,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,34,dismissals,1092,90,47,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,35,total workforce,1089,237,77,16,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,36,16,5,1,0,0,0,0,192,0,-1--1--1,,1|(978,-75)|
+1,37,33,5,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,38,35,34,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,39,35,1,1,0,0,0,0,192,0,-1--1--1,,1|(914,288)|
+10,40,dismissal time,1189,43,68,10,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,40,34,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,42,34,30,1,0,0,0,0,192,0,-1--1--1,,1|(906,63)|
+1,43,34,23,1,0,0,0,0,192,0,-1--1--1,,1|(1264,80)|
+1,44,1,34,1,0,0,0,0,192,0,-1--1--1,,1|(1020,178)|
+1,45,2,35,1,0,0,0,0,192,0,-1--1--1,,1|(1219,146)|
+1,46,16,35,1,0,0,0,0,192,0,-1--1--1,,1|(937,144)|
+1,47,35,23,1,0,0,0,0,192,0,-1--1--1,,1|(1268,131)|
+1,48,35,30,1,0,0,0,0,192,0,-1--1--1,,1|(885,108)|
+1,49,35,20,0,1,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,50,required workforce,512,151,47,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,51,50,1,1,0,0,0,0,192,0,-1--1--1,,1|(640,226)|
+1,52,15,50,1,0,0,0,0,192,0,-1--1--1,,1|(452,191)|
+1,53,26,50,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,54,max workforce,339,89,60,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,55,54,50,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+12,56,0,965,694,604,263,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Cumulative Cost,Causes Strip
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Quality and Productivity
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,133,0
+10,1,productivity,1603,260,77,10,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Average Overtime,1156,162,42,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,time to average overtime,837,135,104,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,overtime,939,236,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,5,overtime lookup,732,221,81,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,6,schedule pressure,751,323,93,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,normal workflow,731,685,78,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,8,max schedule pressure,434,245,95,21,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,9,project is done,435,320,86,19,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,10,indicated workforce,560,844,88,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,11,normal productivity,792,787,113,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,12,eff fatigue quality lookup,1333,45,137,20,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,13,eff fatigue productivity,1343,230,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,14,eff fatigue productivity lookup,1166,306,56,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,15,normal work quality,1627,28,83,17,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,16,2,13,1,0,0,0,0,192,0,-1--1--1,,1|(1266,210)|
+1,17,13,1,1,0,0,0,0,192,0,-1--1--1,,1|(1520,264)|
+1,18,14,13,1,0,0,0,0,192,0,-1--1--1,,1|(1259,271)|
+1,19,4,2,1,0,0,0,0,192,0,-1--1--1,,1|(1075,199)|
+1,20,4,1,1,0,0,0,0,192,0,-1--1--1,,1|(1263,407)|
+1,21,11,1,1,0,0,0,0,192,0,-1--1--1,,1|(1451,521)|
+1,22,11,7,1,0,0,0,0,192,0,-1--1--1,,1|(772,723)|
+1,23,10,7,1,0,0,0,0,192,0,-1--1--1,,1|(680,768)|
+1,24,9,6,1,0,0,0,0,192,0,-1--1--1,,1|(643,328)|
+1,25,8,6,1,0,0,0,0,192,0,-1--1--1,,1|(623,303)|
+1,26,5,4,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,27,3,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,28,6,4,1,0,0,0,0,192,0,-1--1--1,,1|(900,283)|
+10,29,eff fatigue quality,1375,144,112,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,30,2,29,1,0,0,0,0,192,0,-1--1--1,,1|(1251,157)|
+10,31,work quality,1654,142,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,32,12,29,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,33,29,31,1,0,0,0,0,192,0,-1--1--1,,1|(1529,158)|
+1,34,15,31,1,0,0,0,0,192,0,-1--1--1,,1|(1636,108)|
+1,35,7,6,1,0,0,0,0,192,0,-1--1--1,,1|(791,435)|
+10,36,scheduled time remaining,576,659,60,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,37,scheduled completion date,303,660,47,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,38,Time,376,591,29,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,39,38,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,40,37,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,41,36,6,1,0,0,0,0,192,0,-1--1--1,,1|(736,426)|
+10,42,required workflow,463,415,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,43,max workflow,258,418,56,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,44,Work Remaining,296,512,70,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,45,43,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,46,44,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,47,42,6,1,0,0,0,0,192,0,-1--1--1,,1|(621,415)|
+1,48,9,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,49,36,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,50,scheduled completion date project 2 and 3,275,724,69,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,51,50,36,1,0,0,0,0,192,0,-1--1--1,,1|(423,717)|
+10,52,reset time,328,847,56,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,53,52,36,1,0,0,0,0,192,0,-1--1--1,,1|(541,753)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Dashboard
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,82,0
+12,1,0,1099,250,524,207,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Work_Accomplished__Work_
+12,2,0,2085,981,313,206,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Technical Debt,Graph
+12,3,0,2663,967,243,199,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+friction,Graph
+12,4,0,294,200,198,157,8,7,0,4,-1,0,0,0,-1--1--1,226-226-226,|||0-0-0,0,0,256,0,0,0
+Initial work = 1000 units|<<NnN>>|Max workers = 150|<<NnN>>|Normal productivity = 1 unit/month|<<NnN>>||<<NnN>>|8 months * 150 workers = 1200 units|<<NnN>>|Normal work quality = 90%|<<NnN>>||<<NnN>>|Hence, with re-work 1000 units|<<NnN>>| in 8 months should be achievable
+12,5,0,1163,926,583,422,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Cumulative Cost,Causes Strip
+12,6,0,297,410,194,64,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+scheduled completion date,0,24,0.1
+12,7,0,305,542,186,64,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+td during early phase,0,1,0.05
+12,8,0,303,651,188,65,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+td during late phase,0,1,0.05
+12,9,0,302,786,189,67,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+initial tech debt,0,10000,100
+12,10,0,303,912,188,69,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+max workforce,0,500,10
+12,11,0,305,1053,186,62,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+time to increase workforce,0,5,0.2
+12,12,0,303,1158,187,74,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+onboarding time,0,6,1
+12,13,0,2220,1319,448,58,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Cost_project_1
+12,14,0,2218,1470,443,63,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Cost_Project_1_+_2
+12,15,0,301,1315,209,70,8,79,0,0,0,0,0,0,0,0,0,0,0,0
+scheduled completion date project 2 and 3,0,24,0.1
+12,16,0,2043,393,272,350,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Undiscovered Rework,Causes Strip
+///---\\\
+:GRAPH Work_Accomplished__Work_
+:TITLE Work Accomplished, Work Remaining, and Work Flow
+:WIDTH 6
+:HEIGHT 4
+:SCALE
+:VAR Work Accomplished
+:Y-MIN 0
+:DATASET *1
+:VAR Work Remaining
+:Y-MIN 0
+:DATASET *1
+:SCALE
+:VAR workflow
+:Y-MIN 0
+:DATASET *1
+
+:GRAPH workflow_and_Workforce
+:TITLE workflow and Workforce
+:SCALE
+:VAR total workforce
+:DATASET *1
+:SCALE
+:VAR workflow
+:DATASET *1
+
+:TABLE Cumulative_Cost_&_Comple
+:TITLE Cumulative Cost & Completion Time
+:PRETTYNUM
+:X-MIN 10
+:X-MAX 72
+:TIME-DOWN
+:FONT Vensim Sans|12||0-0-0
+:VAR Project Completion Time
+:DATASET *1
+:VAR Cumulative Cost
+:DATASET *1
+
+:TABLE Cost_project_1
+:TITLE Cost project 1
+:PRETTYNUM
+:X-MIN 30
+:X-MAX 31
+:FONT Vensim Sans|12||0-0-0
+:VAR Cumulative Cost
+:DATASET *1
+
+:TABLE Cost_Project_1_+_2
+:TITLE Cost Project 1 + 2
+:PRETTYNUM
+:X-MIN 70
+:X-MAX 71
+:FONT Vensim Sans|12||0-0-0
+:VAR Cumulative Cost
+:DATASET *1
+:L<%^E!@
+1:Current.vdfx
+1:Baseline.vdfx
+4:Time
+5:Veteran Workforce
+9:Current
+19:82,3
+24:0
+25:100
+26:100
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
